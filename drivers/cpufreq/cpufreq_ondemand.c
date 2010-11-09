@@ -54,6 +54,11 @@ static unsigned int def_sampling_rate;
 #define MAX_SAMPLING_RATE			(500 * def_sampling_rate)
 #define TRANSITION_LATENCY_LIMIT		(10 * 1000 * 1000)
 
+#ifdef CONFIG_CPU_S3C6410
+extern unsigned int s3c6410_getspeed(unsigned int);
+extern unsigned int get_min_cpufreq(void);
+#endif /* CONFIG_CPU_S3C6410 */
+
 static void do_dbs_timer(struct work_struct *work);
 
 /* Sampling types */
@@ -123,7 +128,7 @@ static inline cputime64_t get_cpu_idle_time_jiffy(unsigned int cpu,
 		*wall = cur_wall_time;
 
 	return idle_time;
-}
+	}
 
 static inline cputime64_t get_cpu_idle_time(unsigned int cpu, cputime64_t *wall)
 {
@@ -135,6 +140,7 @@ static inline cputime64_t get_cpu_idle_time(unsigned int cpu, cputime64_t *wall)
 	return idle_time;
 }
 
+#ifndef CONFIG_CPU_S3C6410
 /*
  * Find right freq to be set now with powersave_bias on.
  * Returns the freq_hi to be used right now and will set freq_hi_jiffies,
@@ -188,6 +194,7 @@ static unsigned int powersave_bias_target(struct cpufreq_policy *policy,
 	dbs_info->freq_hi_jiffies = jiffies_hi;
 	return freq_hi;
 }
+#endif /* CONFIG_CPU_S3C6410 */
 
 static void ondemand_powersave_bias_init(void)
 {
@@ -431,9 +438,19 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 			max_load_freq = load_freq;
 	}
 
+#ifdef CONFIG_CPU_S3C6410
+	policy->cur = s3c6410_getspeed(0);
+	policy->min = get_min_cpufreq();
+#endif /* CONFIG_CPU_S3C6410 */
 	/* Check for frequency increase */
 	if (max_load_freq > dbs_tuners_ins.up_threshold * policy->cur) {
 		/* if we are already at full speed then break out early */
+#ifdef CONFIG_CPU_S3C6410
+		if (policy->cur == policy->max)
+			return;
+		__cpufreq_driver_target(policy, policy->max,
+                                CPUFREQ_RELATION_H);
+#else
 		if (!dbs_tuners_ins.powersave_bias) {
 			if (policy->cur == policy->max)
 				return;
@@ -446,6 +463,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 			__cpufreq_driver_target(policy, freq,
 				CPUFREQ_RELATION_L);
 		}
+#endif /* CONFIG_CPU_S3C6410 */
 		return;
 	}
 
@@ -467,6 +485,10 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 				(dbs_tuners_ins.up_threshold -
 				 dbs_tuners_ins.down_differential);
 
+#ifdef CONFIG_CPU_S3C6410
+		__cpufreq_driver_target(policy, freq_next,
+                                CPUFREQ_RELATION_L);
+#else
 		if (!dbs_tuners_ins.powersave_bias) {
 			__cpufreq_driver_target(policy, freq_next,
 					CPUFREQ_RELATION_L);
@@ -476,6 +498,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 			__cpufreq_driver_target(policy, freq,
 				CPUFREQ_RELATION_L);
 		}
+#endif /* CONFIG_CPU_S3C6410 */
 	}
 }
 
@@ -549,6 +572,15 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 
 	this_dbs_info = &per_cpu(cpu_dbs_info, cpu);
 
+#ifdef CONFIG_CPU_S3C6410
+	if(!kondemand_wq){
+		kondemand_wq = create_workqueue("kondemand");
+        	if (!kondemand_wq) {
+                	printk(KERN_ERR "Creation of kondemand failed\n");
+                	return -EFAULT;
+        	}
+	}
+#endif /* CONFIG_CPU_S3C6410 */
 	switch (event) {
 	case CPUFREQ_GOV_START:
 		if ((!cpu_online(cpu)) || (!policy->cur))

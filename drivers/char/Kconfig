@@ -893,6 +893,14 @@ config DS1302
 
 endif # RTC_LIB
 
+if S3C64XX_ADCTS=n
+config S3C_ADC
+	bool "S3C ADC Driver"
+	depends on PLAT_S3C
+	help
+	  ADC (A/D Conversion) driver for Samsung S3C2450/2416, S3C6400/6410.
+endif
+
 config DTLK
 	tristate "Double Talk PC internal speech card support"
 	depends on ISA
@@ -1117,6 +1125,15 @@ config DCC_TTY
 	depends on ARM
 
 source "drivers/s390/char/Kconfig"
+
+config S3C_MEM
+	bool "Support for /dev/s3c-mem"
+	default y
+	---help---
+	  If you do say Y here, you can allocate physically linear memories from system memory.
+	  And you can share the memory at the other process using re-allocation ioctl.
+
+	  If unsure, say Y.
 
 endmenu
 

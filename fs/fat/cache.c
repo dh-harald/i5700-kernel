@@ -29,6 +29,9 @@ struct fat_cache_id {
 	int dcluster;
 };
 
+
+int error_count=0;
+
 static inline int fat_max_cache(struct inode *inode)
 {
 	return FAT_MAX_CACHE;
@@ -285,8 +288,14 @@ static int fat_bmap_cluster(struct inode *inode, int cluster)
 	if (ret < 0)
 		return ret;
 	else if (ret == FAT_ENT_EOF) {
-		fat_fs_error(sb, "%s: request beyond EOF (i_pos %lld)",
-			     __func__, MSDOS_I(inode)->i_pos);
+	
+		if(error_count%100==0)
+		{
+			fat_fs_error(sb, "%s: request beyond EOF (i_pos %lld)",
+					 __func__, MSDOS_I(inode)->i_pos);
+		}
+		error_count++;
+
 		return -EIO;
 	}
 	return dclus;

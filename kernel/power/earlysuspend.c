@@ -152,7 +152,7 @@ void request_suspend_state(suspend_state_t new_state)
 		struct rtc_time tm;
 		getnstimeofday(&ts);
 		rtc_time_to_tm(ts.tv_sec, &tm);
-		pr_info("request_suspend_state: %s (%d->%d) at %lld "
+		pr_debug("request_suspend_state: %s (%d->%d) at %lld "
 			"(%d-%02d-%02d %02d:%02d:%02d.%09lu UTC)\n",
 			new_state != PM_SUSPEND_ON ? "sleep" : "wakeup",
 			requested_suspend_state, new_state,

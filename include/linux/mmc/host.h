@@ -118,6 +118,8 @@ struct mmc_host {
 #define MMC_CAP_SPI		(1 << 4)	/* Talks only SPI protocols */
 #define MMC_CAP_NEEDS_POLL	(1 << 5)	/* Needs polling for card-detection */
 #define MMC_CAP_8_BIT_DATA	(1 << 6)	/* Can the host do 8 bit transfers */
+#define MMC_CAP_ON_BOARD	(1 << 7)	/* Do not need to rescan after bootup */
+#define MMC_CAP_BOOT_ONTHEFLY	(1 << 8)	/* Can detect device at boot time */
 
 	/* host specific block data */
 	unsigned int		max_seg_size;	/* see blk_queue_max_segment_size */

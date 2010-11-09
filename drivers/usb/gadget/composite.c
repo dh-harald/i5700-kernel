@@ -27,7 +27,6 @@
 
 #include <linux/usb/composite.h>
 
-
 /*
  * The code in this file is utility code, used to build a gadget driver
  * from one or more "function" drivers, one or more "configuration"
@@ -428,7 +427,8 @@ static int set_config(struct usb_composite_dev *cdev,
 		struct usb_function	*f = c->interface[tmp];
 
 		if (!f)
-			break;
+			//break;
+			continue;
 
 		result = f->set_alt(f, tmp, 0);
 		if (result < 0) {
@@ -820,12 +820,23 @@ unknown:
 				== USB_RECIP_INTERFACE) {
 			if (cdev->config == NULL)
 				return value;
-
-			f = cdev->config->interface[intf];
-			if (f && f->setup)
-				value = f->setup(f, ctrl);
-			else
+/* 
+ * by ss1.yang check w_index is proper value 
+ * because of USBCV - MSC Test - MSC ClassRequestTest_DeviceConfigured
+ * Issuing Get Max LUN request with invalid wIndex parameter
+ */
+//			if (cdev->config && w_index < MAX_CONFIG_INTERFACES) {				
+			if (cdev->config && w_index < cdev->config->next_interface_id) {
+				f = cdev->config->interface[intf];
+				if (f && f->setup)
+					value = f->setup(f, ctrl);
+				else
+					f = NULL;
+			}
+			else {
+				printk("\n invalid w_index [interface %d]\n", w_index);
 				f = NULL;
+			}
 		}
 		if (value < 0 && !f) {
 			struct usb_configuration	*c;
@@ -853,7 +864,6 @@ unknown:
 				value = cfg->setup(cfg, ctrl);
 			}
 		}
-
 		goto done;
 	}
 

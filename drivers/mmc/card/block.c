@@ -416,7 +416,8 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
 				cmd.flags = MMC_RSP_R1 | MMC_CMD_AC;
 				err = mmc_wait_for_cmd(card->host, &cmd, 5);
 				if (err) {
-					printk(KERN_ERR "%s: error %d requesting status\n",
+					/* Change from KERN_ERR to KERN_DEBUG to eliminate SD card notification sound crach. */
+					printk(KERN_DEBUG "%s: error %d requesting status\n",
 					       req->rq_disk->disk_name, err);
 					goto cmd_err;
 				}

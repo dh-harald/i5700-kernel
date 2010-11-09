@@ -261,10 +261,15 @@ static long has_wake_lock_locked(int type)
 	return max_timeout;
 }
 
+extern unsigned char ftm_sleep;
 long has_wake_lock(int type)
 {
 	long ret;
 	unsigned long irqflags;
+
+	if (ftm_sleep)
+		return 0;
+
 	spin_lock_irqsave(&list_lock, irqflags);
 	ret = has_wake_lock_locked(type);
 	spin_unlock_irqrestore(&list_lock, irqflags);
@@ -530,6 +535,13 @@ int wake_lock_active(struct wake_lock *lock)
 	return !!(lock->flags & WAKE_LOCK_ACTIVE);
 }
 EXPORT_SYMBOL(wake_lock_active);
+
+void wakelock_force_suspend(void)
+{
+	pr_info("%s: suspend!!!!!\n", __func__);
+	queue_work(suspend_work_queue, &suspend_work);
+}
+EXPORT_SYMBOL(wakelock_force_suspend);
 
 static int __init wakelocks_init(void)
 {

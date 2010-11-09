@@ -462,9 +462,15 @@ static int rndis_set_alt(struct usb_function *f, unsigned intf, unsigned alt)
 			usb_ep_disable(rndis->notify);
 		} else {
 			VDBG(cdev, "init rndis ctrl %d\n", intf);
+			
+			VDBG(cdev, "rndis->hs.notify %p\n", rndis->hs.notify);
+			VDBG(cdev, "rndis->fs.notify %p\n", rndis->fs.notify);
+			
 			rndis->notify_desc = ep_choose(cdev->gadget,
 					rndis->hs.notify,
 					rndis->fs.notify);
+			
+			VDBG(cdev, "rndis->notify_desc %p\n", rndis->notify_desc);
 		}
 		usb_ep_enable(rndis->notify, rndis->notify_desc);
 		rndis->notify->driver_data = rndis;

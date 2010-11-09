@@ -37,6 +37,9 @@
 #include "sd_ops.h"
 #include "sdio_ops.h"
 
+#include <linux/io.h>
+#include <plat/regs-gpio.h>
+
 static struct workqueue_struct *workqueue;
 static struct wake_lock mmc_delayed_work_wake_lock;
 
@@ -757,6 +760,7 @@ void mmc_detect_change(struct mmc_host *host, unsigned long delay)
 
 EXPORT_SYMBOL(mmc_detect_change);
 
+int g_rescan_retry = 0;
 
 void mmc_rescan(struct work_struct *work)
 {
@@ -765,6 +769,11 @@ void mmc_rescan(struct work_struct *work)
 	u32 ocr;
 	int err;
 	int extend_wakelock = 0;
+	int ext_CD_int = 0;
+	unsigned int eint0msk = 0;
+
+	ext_CD_int = readl(S3C64XX_GPNDAT);
+	ext_CD_int &= 0x40;	/* GPN6 */
 
 	mmc_bus_get(host);
 
@@ -786,7 +795,22 @@ void mmc_rescan(struct work_struct *work)
 
 	/* if there still is a card present, stop here */
 	if (host->bus_ops != NULL) {
+		if (host->bus_ops->detect && !host->bus_dead)
+			host->bus_ops->detect(host);
+
 		mmc_bus_put(host);
+
+		if(host->index ==0 && g_rescan_retry)
+		{
+			ext_CD_int = readl(S3C64XX_GPNDAT);
+			ext_CD_int &= 0x40;	/* GPN6 */
+
+			if (!ext_CD_int)
+			{
+				mmc_detect_change(host, msecs_to_jiffies(200));
+				g_rescan_retry = 0;
+			}
+		}
 		goto out;
 	}
 
@@ -841,6 +865,13 @@ void mmc_rescan(struct work_struct *work)
 
 	mmc_release_host(host);
 	mmc_power_off(host);
+
+	if (!ext_CD_int)
+	{
+		eint0msk = __raw_readl(S3C64XX_EINT0MASK);
+		eint0msk &= 0x0FFFFFFF & ~(1 << 6);
+		__raw_writel(eint0msk, S3C64XX_EINT0MASK);
+	}
 
 out:
 	if (extend_wakelock)

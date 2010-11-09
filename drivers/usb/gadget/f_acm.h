@@ -1,8 +1,7 @@
 /*
- * Gadget Driver for Android ACM
+ * Gadget Driver for Android, with ADB and UMS and ACM support
  *
- * Copyright (C) 2009 Motorola, Inc.
- * Author:
+ * Copyright (C) 2009 Samsung Electronics, Seung-Soo Yang
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -20,5 +19,6 @@
 
 int acm_function_add(struct usb_composite_dev *cdev,
 	struct usb_configuration *c);
+void acm_function_enable(int enable);
 
 #endif /* __F_ACM_H */

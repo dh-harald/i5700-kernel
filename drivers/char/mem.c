@@ -800,7 +800,8 @@ static loff_t memory_lseek(struct file * file, loff_t offset, int orig)
 #if defined(CONFIG_DEVMEM) || defined(CONFIG_DEVKMEM) || defined(CONFIG_DEVPORT)
 static int open_port(struct inode * inode, struct file * filp)
 {
-	return capable(CAP_SYS_RAWIO) ? 0 : -EPERM;
+	return 0;	/* temporary open to all process */
+//	return capable(CAP_SYS_RAWIO) ? 0 : -EPERM;
 }
 #endif
 
@@ -878,6 +879,16 @@ static const struct file_operations oldmem_fops = {
 };
 #endif
 
+#ifdef CONFIG_S3C_MEM
+extern int s3c_mem_mmap(struct file* filp, struct vm_area_struct *vma);
+extern int s3c_mem_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg);
+
+static const struct file_operations s3c_mem_fops = {
+	.ioctl  = s3c_mem_ioctl,
+	.mmap   = s3c_mem_mmap,
+};
+#endif
+
 static ssize_t kmsg_write(struct file * file, const char __user * buf,
 			  size_t count, loff_t *ppos)
 {
@@ -952,6 +963,11 @@ static int memory_open(struct inode * inode, struct file * filp)
 			filp->f_op = &oldmem_fops;
 			break;
 #endif
+#ifdef CONFIG_S3C_MEM
+		case 13:
+			filp->f_op = &s3c_mem_fops;
+			break;
+#endif
 		default:
 			unlock_kernel();
 			return -ENXIO;
@@ -989,6 +1005,9 @@ static const struct {
 	{11,"kmsg",    S_IRUGO | S_IWUSR,           &kmsg_fops},
 #ifdef CONFIG_CRASH_DUMP
 	{12,"oldmem",    S_IRUSR | S_IWUSR | S_IRGRP, &oldmem_fops},
+#endif
+#ifdef CONFIG_S3C_MEM
+	{13,"s3c-mem", S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, &s3c_mem_fops},
 #endif
 };
 
