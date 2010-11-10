@@ -600,6 +600,11 @@ static void set_path_gain(struct snd_soc_codec *codec, int mode)
 	/* Set output tunning value */
 	switch (mode) 
 	{
+		case MM_AUDIO_FMRADIO_HP :
+			codec->write(codec, 0x08, 0xB5); 	// Output Volume Control : OUT2[7:4]/OUT1[2:0]
+			codec->write(codec, 0x1A, 0x18); 	// Lch Output Digital Vol
+			codec->write(codec, 0x1B, 0x18); 	// Rch Output Digital Vol
+			break;
 		case MM_AUDIO_PLAYBACK_RCV :
 			break;
 		case MM_AUDIO_PLAYBACK_SPK :
@@ -679,6 +684,21 @@ int path_enable(struct snd_soc_codec *codec, int mode)
 		case 0:
 			break;
 
+		case MM_AUDIO_FMRADIO_HP :
+
+			codec->write(codec, 0x53, 0x26);	// PMPCM+PMSRB power up, clk: SYNCB
+			codec->write(codec, 0x59, 0x54);	// BIVOL -> SRC-B, SRC-B=> SDTO
+			codec->write(codec, 0x15, 0x50);	// SRC-B -> pre D/A
+			mdelay(1);
+			codec->write(codec, 0x0B, 0x01); 	// D/A Lch -> Lout2
+			codec->write(codec, 0x0C, 0x01); 	// D/A Rch -> Rout2
+			codec->write(codec, 0x00, 0x01); 	// VCOM power up
+			mdelay(1); 				// wait 100ns
+			codec->write(codec, 0x00, 0xC1); 	// D/A power-up
+			codec->write(codec, 0x10, 0x63); 	// PMLO2,PMRO2,PMLO2S,PMRO2s='1'
+			mdelay(1);				// wait 100ns
+			codec->write(codec, 0x10, 0x67); 	// MUTEN='1'
+			break;
 		case MM_AUDIO_PLAYBACK_RCV :
 			//P("set MM_AUDIO_PLAYBACK_RCV");
 			codec->write(codec, 0x09, 0x01); 	// D/A Lch -> Lout1
@@ -852,7 +872,7 @@ int path_enable(struct snd_soc_codec *codec, int mode)
 			codec->write(codec, 0x00, 0x01); 		// => VCOM power-up
 			mdelay(2); 		//Wait more than 100ns
 			codec->write(codec, 0x53, 0x0F); 		// => PMPCM,PMSRA, PMSRB=1
-													// PCM reference= BICKA(VCOCBT=10kohm&4.7nF)
+									// PCM reference= BICKA(VCOCBT=10kohm&4.7nF)
 			mdelay(40); 		// Lock time= 40ms
 			break;		
 		default :
@@ -875,6 +895,17 @@ int path_disable(struct snd_soc_codec *codec, int mode)
 			P("Path : Off");
 			break;
 
+		case MM_AUDIO_FMRADIO_HP :
+			codec->write(codec, 0x15, 0x00);
+			codec->write(codec, 0x53, 0x00);
+			codec->write(codec, 0x59, 0x00);
+
+			codec->write(codec, 0x10, 0x73); 	// MUTEN='0'
+			mdelay(30); 	// wait more than 30ms
+			codec->write(codec, 0x10, 0x00); 	// LOUT2/ROUT2 power-down
+			codec->write(codec, 0x00, 0x01); 	// VCOM power up
+			codec->write(codec, 0x00, 0x00); 	// VCOM power down
+			break;
 		case MM_AUDIO_PLAYBACK_RCV :
 			//P("MM_AUDIO_PLAYBACK_RCV Off");
 			codec->write(codec, 0x0F, 0x27); 	// LOPS='1'
