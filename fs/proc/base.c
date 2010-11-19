@@ -1008,17 +1008,11 @@ static ssize_t oom_adjust_read(struct file *file, char __user *buf,
 	struct task_struct *task = get_proc_task(file->f_path.dentry->d_inode);
 	char buffer[PROC_NUMBUF];
 	size_t len;
-	int oom_adjust = OOM_DISABLE;
-	unsigned long flags;
+	int oom_adjust;
 
 	if (!task)
 		return -ESRCH;
-
-	if (lock_task_sighand(task, &flags)) {
-		oom_adjust = task->signal->oom_adj;
-		unlock_task_sighand(task, &flags);
-	}
-
+	oom_adjust = task->oomkilladj;
 	put_task_struct(task);
 
 	len = snprintf(buffer, sizeof(buffer), "%i\n", oom_adjust);
@@ -1032,7 +1026,6 @@ static ssize_t oom_adjust_write(struct file *file, const char __user *buf,
 	struct task_struct *task;
 	char buffer[PROC_NUMBUF], *end;
 	int oom_adjust;
-	unsigned long flags;
 
 	memset(buffer, 0, sizeof(buffer));
 	if (count > sizeof(buffer) - 1)
@@ -1048,20 +1041,11 @@ static ssize_t oom_adjust_write(struct file *file, const char __user *buf,
 	task = get_proc_task(file->f_path.dentry->d_inode);
 	if (!task)
 		return -ESRCH;
-	if (!lock_task_sighand(task, &flags)) {
-		put_task_struct(task);
-		return -ESRCH;
-	}
-
-	if (oom_adjust < task->signal->oom_adj && !capable(CAP_SYS_RESOURCE)) {
-		unlock_task_sighand(task, &flags);
+	if (oom_adjust < task->oomkilladj && !capable(CAP_SYS_RESOURCE)) {
 		put_task_struct(task);
 		return -EACCES;
 	}
-
-	task->signal->oom_adj = oom_adjust;
-
-	unlock_task_sighand(task, &flags);
+	task->oomkilladj = oom_adjust;
 	put_task_struct(task);
 	if (end - buffer == 0)
 		return -EIO;

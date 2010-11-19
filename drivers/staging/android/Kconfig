@@ -6,8 +6,6 @@ config ANDROID
 	---help---
 	  Enable support for various drivers needed on the Android platform
 
-if ANDROID
-
 config ANDROID_BINDER_IPC
 	bool "Android Binder IPC Driver"
 	default n
