@@ -18,16 +18,18 @@
  */
 #define BATT_CAL		2447	/* 3.60V */
 
-#define BATT_MAXIMUM		406	/* 4.176V */
-#define BATT_FULL		353	/* 4.10V  */
-#define BATT_SAFE_RECHARGE 353	/* 4.10V */
-#define BATT_ALMOST_FULL	188 /* 3.8641V */	//322	/* 4.066V */
-#define BATT_HIGH		112 /* 3.7554V */ 		//221	/* 3.919V */
-#define BATT_MED		66 /* 3.6907V */ 		//146	/* 3.811V */
-#define BATT_LOW		43 /* 3.6566V */		//112	/* 3.763V */
-#define BATT_CRITICAL		8 /* 3.6037V */ 	//(74)	/* 3.707V */
-#define BATT_MINIMUM		(-28) /* 3.554V */	//(38)	/* 3.655V */
-#define BATT_OFF		(-128) /* 3.4029V */	//(-103)	/* 3.45V  */
+#define BATT_MAXIMUM		555	/* 4.176V default:: 406*/
+#define BATT_FULL		550	/* 4.10V, default: 353   */
+#define BATT_PRE_FULL_HIGH	490
+#define BATT_PRE_FULL		460
+#define BATT_SAFE_RECHARGE 551	/* 4.10V default: 353*/
+#define BATT_ALMOST_FULL	400 /* 3.8641V  default: 188*/ //322	/* 4.066V */
+#define BATT_HIGH		300 /* 3.7554V default: 112 */ 		//221	/* 3.919V */
+#define BATT_MED		250 /* 3.6907V default: 66 */ 		//146	/* 3.811V */
+#define BATT_LOW		180 /* 3.6566V default: 43 */		//112	/* 3.763V */
+#define BATT_CRITICAL		130 /* 3.6037V default: 8 */ 	//(74)	/* 3.707V */
+#define BATT_MINIMUM		(20) /* 3.554V default: -28 */	//(38)	/* 3.655V */
+#define BATT_OFF		(-128) /* 3.4029V default: -128 */	//(-103)	/* 3.45V  */
 
 /*
  * Spica Rev00 board Temperature Table
@@ -150,24 +152,24 @@ const unsigned int gpio_chg_en_af	= GPIO_TA_EN_AF;
 #define __TEST_DEVICE_DRIVER__
 /* #define __ALWAYS_AWAKE_DEVICE__  */
 #define __TEST_MODE_INTERFACE__
+//#define __ADJUST_RECHARGE_ADC__
 /*****************************************************************************/
 
 #define TOTAL_CHARGING_TIME	(6*60*60*1000)	/* 6 hours */
 #define TOTAL_RECHARGING_TIME	(2*60*60*1000)	/* 2 hours */
 
 #ifdef __BATTERY_COMPENSATION__
-#define COMPENSATE_VIBRATOR		19
-#define COMPENSATE_CAMERA		25
-#define COMPENSATE_MP3			17
-#define COMPENSATE_VIDEO		28
-#define COMPENSATE_VOICE_CALL_2G	13
-#define COMPENSATE_VOICE_CALL_3G	14
-#define COMPENSATE_DATA_CALL		25
-#define COMPENSATE_LCD			0
-#define COMPENSATE_TA			0
-#define COMPENSATE_CAM_FALSH		0
-#define COMPENSATE_BOOTING		52
+#define COMPENSATE_VIBRATOR		19 //default 19
+#define COMPENSATE_CAMERA		25 //default 25
+#define COMPENSATE_MP3			17 //default 17
+#define COMPENSATE_VIDEO		28 //default 28
+#define COMPENSATE_VOICE_CALL_2G	13 //default 13
+#define COMPENSATE_VOICE_CALL_3G	14 //default 14
+#define COMPENSATE_DATA_CALL		25 //default 25
+#define COMPENSATE_LCD			0 //default 0
+#define COMPENSATE_TA			0 //default 0
+#define COMPENSATE_CAM_FALSH		0 //default 0
+#define COMPENSATE_BOOTING		150 //default: 52
 #endif /* __BATTERY_COMPENSATION__ */
 
 #define convert_adc2voltage(x)		((x - 2170) * 10 / 7 / 100 * 100 + 3200)
-
