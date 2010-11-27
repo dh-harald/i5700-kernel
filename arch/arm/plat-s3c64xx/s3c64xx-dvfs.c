@@ -102,13 +102,13 @@ static const unsigned int frequency_match_532MHz[][4] = {
 /* frequency voltage matching table */
 static const unsigned int frequency_match_800MHz[][4] = {
 /* frequency, Mathced VDD ARM voltage , Matched VDD INT*/
-	{800000, 1300, 1250, 0},
-	{400000, 1100, 1250, 1},
-	{266000, 1050, 1250, 2},
-	{133000, 1000, 1250, 3},
+	{800000, 1250, 1250, 0},
+	{400000, 1050, 1250, 1},
+	{266000, 1000, 1250, 2},
+	{133000, 950, 1250, 3},
 #ifdef USE_DVFS_AL1_LEVEL
-	{133000, 1000, 1050, 4},
-	{66000, 1000, 1050, 5},
+	{133000, 950, 1050, 4},
+	{66000, 950, 1050, 5},
 #else
 	{66000, 1050, 1050, 4},
 #endif /* USE_DVFS_AL1_LEVEL */
