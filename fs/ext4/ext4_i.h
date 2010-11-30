@@ -33,6 +33,9 @@ typedef __u32 ext4_lblk_t;
 /* data type for block group number */
 typedef unsigned int ext4_group_t;
 
+#define rsv_start rsv_window._rsv_start
+#define rsv_end rsv_window._rsv_end
+
 /*
  * storage for cached extent
  */
@@ -121,9 +124,6 @@ struct ext4_inode_info {
 	/* mballoc */
 	struct list_head i_prealloc_list;
 	spinlock_t i_prealloc_lock;
-
-	/* ialloc */
-	ext4_group_t	i_last_alloc_group;
 
 	/* allocation reservation info for delalloc */
 	unsigned int i_reserved_data_blocks;
