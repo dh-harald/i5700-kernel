@@ -67,8 +67,7 @@ int ext4_check_dir_entry(const char *function, struct inode *dir,
 			 unsigned int offset)
 {
 	const char *error_msg = NULL;
-	const int rlen = ext4_rec_len_from_disk(de->rec_len,
-						dir->i_sb->s_blocksize);
+	const int rlen = ext4_rec_len_from_disk(de->rec_len);
 
 	if (rlen < EXT4_DIR_REC_LEN(1))
 		error_msg = "rec_len is smaller than minimal";
@@ -179,11 +178,10 @@ revalidate:
 				 * least that it is non-zero.  A
 				 * failure will be detected in the
 				 * dirent test below. */
-				if (ext4_rec_len_from_disk(de->rec_len,
-					sb->s_blocksize) < EXT4_DIR_REC_LEN(1))
+				if (ext4_rec_len_from_disk(de->rec_len)
+						< EXT4_DIR_REC_LEN(1))
 					break;
-				i += ext4_rec_len_from_disk(de->rec_len,
-							    sb->s_blocksize);
+				i += ext4_rec_len_from_disk(de->rec_len);
 			}
 			offset = i;
 			filp->f_pos = (filp->f_pos & ~(sb->s_blocksize - 1))
@@ -205,8 +203,7 @@ revalidate:
 				ret = stored;
 				goto out;
 			}
-			offset += ext4_rec_len_from_disk(de->rec_len,
-					sb->s_blocksize);
+			offset += ext4_rec_len_from_disk(de->rec_len);
 			if (le32_to_cpu(de->inode)) {
 				/* We might block in the next section
 				 * if the data destination is
@@ -228,8 +225,7 @@ revalidate:
 					goto revalidate;
 				stored++;
 			}
-			filp->f_pos += ext4_rec_len_from_disk(de->rec_len,
-						sb->s_blocksize);
+			filp->f_pos += ext4_rec_len_from_disk(de->rec_len);
 		}
 		offset = 0;
 		brelse(bh);
