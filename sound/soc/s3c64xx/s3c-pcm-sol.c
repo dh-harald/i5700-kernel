@@ -26,6 +26,7 @@
 #include <linux/dma-mapping.h>
 #include <linux/kernel.h>
 #include <linux/proc_fs.h>
+#include <linux/xmister.h>
 #include <asm/uaccess.h>
 #define PROCFS_NAME 		"soundfix"
 
@@ -67,7 +68,6 @@ unsigned int USE_LLI=1;
 #endif
 
 static struct proc_dir_entry *LLI_Proc_File;
-static struct proc_dir_entry *xmister_dir;
 
 static char procfs_value='1';
 
@@ -124,7 +124,7 @@ void set_lli(unsigned int value) {
 	USE_LLI=value;
 }
 
-int procfile_read(char *buffer,
+int lli_procfile_read(char *buffer,
 	      char **buffer_location,
 	      off_t offset, int buffer_length, int *eof, void *data)
 {
@@ -142,17 +142,19 @@ int procfile_read(char *buffer,
 	return ret;
 }
 
-int procfile_write(struct file *file, const char *buffer, unsigned long count,
+int lli_procfile_write(struct file *file, const char *buffer, unsigned long count,
 		   void *data)
 {
+	if ( buffer[0] < '0' || buffer[0] > '1' ) return procfs_has_value;
+	
 	procfs_has_value = count;
 	if (procfs_has_value > 1 ) {
 		procfs_has_value=1;
 	}
 	
 	/* write data to the buffer */
-	if ( buffer[0] >= '0' && buffer[0] <= '1' && copy_from_user(&procfs_value, buffer, procfs_has_value) ) {
-		printk(KERN_INFO "soundfix error: %c %s %d\n", procfs_value, buffer, procfs_has_value);
+	if ( copy_from_user(&procfs_value, buffer, procfs_has_value) ) {
+		printk(KERN_INFO "soundfix error: %c %s %lu\n", procfs_value, buffer, procfs_has_value);
 		return -EFAULT;
 	}
 
@@ -685,25 +687,24 @@ struct snd_soc_platform s3c24xx_soc_platform = {
 EXPORT_SYMBOL_GPL(s3c24xx_soc_platform);
 
 static int __init s3c_soc_platform_init(void)
-{
-	xmister_dir = proc_mkdir("xmister", NULL); 
-	LLI_Proc_File = create_proc_entry(PROCFS_NAME, 0644, xmister_dir);
+{ 
+	LLI_Proc_File = xm_add(PROCFS_NAME);
 	
 	if (LLI_Proc_File == NULL) {
-		remove_proc_entry(PROCFS_NAME, NULL);
-		printk(KERN_ALERT "Error: Could not initialize /proc/%s\n",
+		xm_remove(PROCFS_NAME);
+		printk(KERN_ALERT "Error: Could not initialize /proc/xmister/%s\n",
 			PROCFS_NAME);
 	}
 	else {
-		LLI_Proc_File->read_proc  = procfile_read;
-		LLI_Proc_File->write_proc = procfile_write;
+		LLI_Proc_File->read_proc  = lli_procfile_read;
+		LLI_Proc_File->write_proc = lli_procfile_write;
 		LLI_Proc_File->owner 	  = THIS_MODULE;
 		LLI_Proc_File->mode 	  = S_IFREG | S_IRUGO;
 		LLI_Proc_File->uid 	  = 0;
 		LLI_Proc_File->gid 	  = 0;
 		LLI_Proc_File->size 	  = 37;
 
-		printk(KERN_INFO "/proc/%s created\n", PROCFS_NAME);
+		printk(KERN_INFO "/proc/xmister/%s created\n", PROCFS_NAME);
 	}
 
     return snd_soc_register_platform(&s3c24xx_soc_platform);
@@ -714,8 +715,8 @@ module_init(s3c_soc_platform_init);
 static void __exit s3c_soc_platform_exit(void)
 {
     snd_soc_unregister_platform(&s3c24xx_soc_platform);
-    remove_proc_entry(PROCFS_NAME, NULL);
-	printk(KERN_INFO "/proc/%s removed\n", PROCFS_NAME);
+    xm_remove(PROCFS_NAME);
+	printk(KERN_INFO "/proc/xmister/%s removed\n", PROCFS_NAME);
 }
 
 module_exit(s3c_soc_platform_exit);
