@@ -4,7 +4,7 @@
 #include <linux/xmister.h>
 
 #define PROC_DIR "xmister"
-
+extern unsigned int ANDROID_BUF_NUM = 16; //Default value should be changed here
 static struct proc_dir_entry *xm_dir = NULL;
 
 void xm_init() {

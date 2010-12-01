@@ -29,6 +29,8 @@
 #include <linux/xmister.h>
 #include <asm/uaccess.h>
 #define PROCFS_NAME 		"soundfix"
+#define BUF_PROCFS_NAME 	"buffer"
+#define PROCFS_SIZE 		3
 
 
 
@@ -68,14 +70,12 @@ unsigned int USE_LLI=1;
 #endif
 
 static struct proc_dir_entry *LLI_Proc_File;
+static struct proc_dir_entry *BUF_Proc_File;
 
 static char procfs_value='1';
-
-/**
- * The size of the buffer
- *
- */
 static unsigned long procfs_has_value = 1;
+static char procfs_buffer[PROCFS_SIZE];
+static unsigned long procfs_buffer_size = 0;
 
 
 static const struct snd_pcm_hardware s3c24xx_pcm_hardware = {
@@ -142,6 +142,24 @@ int lli_procfile_read(char *buffer,
 	return ret;
 }
 
+int buf_procfile_read(char *buffer,
+	      char **buffer_location,
+	      off_t offset, int buffer_length, int *eof, void *data)
+{
+	int ret;
+	
+	if (offset > 0) {
+		/* we have finished to read, return 0 */
+		ret  = 0;
+	} else {
+		/* fill the buffer, return the buffer size */
+		memcpy(buffer, procfs_buffer, procfs_buffer_size);
+		ret = procfs_buffer_size;
+	}
+
+	return ret;
+}
+
 int lli_procfile_write(struct file *file, const char *buffer, unsigned long count,
 		   void *data)
 {
@@ -165,6 +183,30 @@ int lli_procfile_write(struct file *file, const char *buffer, unsigned long coun
 	return procfs_has_value;
 }
 
+int buf_procfile_write(struct file *file, const char *buffer, unsigned long count,
+		   void *data)
+{
+	int temp;
+
+	temp=0;
+	if ( sscanf(buffer,"%d",&temp) < 1 ) return procfs_buffer_size;
+	if ( temp < 1 || temp > 99 ) return procfs_buffer_size;
+	
+	procfs_buffer_size = count;
+	if (procfs_buffer_size > PROCFS_SIZE ) {
+		procfs_buffer_size=PROCFS_SIZE;
+	}
+	
+	/* write data to the buffer */
+	if ( copy_from_user(procfs_buffer, buffer, procfs_buffer_size) ) {
+		printk(KERN_INFO "buffer_size error\n");
+		return -EFAULT;
+	}
+	
+	sscanf(procfs_buffer,"%u",&ANDROID_BUF_NUM);
+	
+	return procfs_buffer_size;
+}
 
 
 /* s3c6410_pcm_dma_param_init
@@ -707,6 +749,28 @@ static int __init s3c_soc_platform_init(void)
 		printk(KERN_INFO "/proc/xmister/%s created\n", PROCFS_NAME);
 	}
 
+	BUF_Proc_File = xm_add(BUF_PROCFS_NAME);
+	
+	if (BUF_Proc_File == NULL) {
+		xm_remove(BUF_PROCFS_NAME);
+		printk(KERN_ALERT "Error: Could not initialize /proc/xmister/%s\n",
+			BUF_PROCFS_NAME);
+	}
+	else {
+		BUF_Proc_File->read_proc  = buf_procfile_read;
+		BUF_Proc_File->write_proc = buf_procfile_write;
+		BUF_Proc_File->owner 	  = THIS_MODULE;
+		BUF_Proc_File->mode 	  = S_IFREG | S_IRUGO;
+		BUF_Proc_File->uid 	  = 0;
+		BUF_Proc_File->gid 	  = 0;
+		BUF_Proc_File->size 	  = 37;
+
+		sprintf(procfs_buffer,"%d",ANDROID_BUF_NUM);
+		procfs_buffer_size=strlen(procfs_buffer);
+
+		printk(KERN_INFO "/proc/xmister/%s created\n", BUF_PROCFS_NAME);
+	}
+
     return snd_soc_register_platform(&s3c24xx_soc_platform);
 }
 
@@ -716,7 +780,9 @@ static void __exit s3c_soc_platform_exit(void)
 {
     snd_soc_unregister_platform(&s3c24xx_soc_platform);
     xm_remove(PROCFS_NAME);
-	printk(KERN_INFO "/proc/xmister/%s removed\n", PROCFS_NAME);
+    printk(KERN_INFO "/proc/xmister/%s removed\n", PROCFS_NAME);
+    xm_remove(BUF_PROCFS_NAME);
+    printk(KERN_INFO "/proc/xmister/%s removed\n", BUF_PROCFS_NAME);
 }
 
 module_exit(s3c_soc_platform_exit);
