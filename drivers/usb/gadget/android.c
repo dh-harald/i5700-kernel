@@ -208,7 +208,7 @@ static int product_matches_functions(struct android_usb_product *p)
 {
 	struct usb_function		*f;
 	list_for_each_entry(f, &android_config_driver.functions, list) {
-		if (product_has_function(p, f) == !!f->disabled)
+		if (product_has_function(p, f) == !!f->hidden)
 			return 0;
 	}
 	return 1;
@@ -230,11 +230,13 @@ static int get_product_id(struct android_dev *dev)
 	return dev->product_id;
 }
 
+extern void get_usb_serial(char *usb_serial_number);
 static int __init android_bind(struct usb_composite_dev *cdev)
 {
 	struct android_dev *dev = _android_dev;
 	struct usb_gadget	*gadget = cdev->gadget;
 	int			gcnum, id, product_id, ret;
+	char usb_serial_number[13] = {0,};
 
 	printk(KERN_INFO "android_bind\n");
 
@@ -256,7 +258,13 @@ static int __init android_bind(struct usb_composite_dev *cdev)
 	id = usb_string_id(cdev);
 	if (id < 0)
 		return id;
+	get_usb_serial(usb_serial_number);
 	strings_dev[STRING_SERIAL_IDX].id = id;
+	if( (usb_serial_number[0] +
+		 usb_serial_number[1] +
+		 usb_serial_number[2]) != 0 )
+	strcpy((char *)(strings_dev[STRING_SERIAL_IDX].s), usb_serial_number);
+	printk("[ADB_UMS] string_dev = %s \n",strings_dev[STRING_SERIAL_IDX].s);
 	device_desc.iSerialNumber = id;
 
 	if (gadget->ops->wakeup)
@@ -323,8 +331,8 @@ void android_enable_function(struct usb_function *f, int enable)
 	int disable = !enable;
 	int product_id;
 
-	if (!!f->disabled != disable) {
-		usb_function_set_enabled(f, !disable);
+	if (!!f->hidden != disable) {
+		f->hidden = disable;
 
 #ifdef CONFIG_USB_ANDROID_RNDIS
 		if (!strcmp(f->name, "rndis")) {
@@ -347,7 +355,7 @@ void android_enable_function(struct usb_function *f, int enable)
 			 */
 			list_for_each_entry(func, &android_config_driver.functions, list) {
 				if (!strcmp(func->name, "usb_mass_storage")) {
-					usb_function_set_enabled(func, !enable);
+					func->hidden = enable;
 					break;
 				}
 			}
@@ -358,7 +366,14 @@ void android_enable_function(struct usb_function *f, int enable)
 		device_desc.idProduct = __constant_cpu_to_le16(product_id);
 		if (dev->cdev)
 			dev->cdev->desc.idProduct = device_desc.idProduct;
-		usb_composite_force_reset(dev->cdev);
+
+		/* force reenumeration */
+		if (dev->cdev && dev->cdev->gadget &&
+				dev->cdev->gadget->speed != USB_SPEED_UNKNOWN) {
+			usb_gadget_disconnect(dev->cdev->gadget);
+			msleep(10);
+			usb_gadget_connect(dev->cdev->gadget);
+		}
 	}
 }
 

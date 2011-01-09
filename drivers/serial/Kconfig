@@ -525,7 +525,7 @@ config SERIAL_S3C24A0
 	help
 	  Serial port support for the Samsung S3C24A0 SoC
 
-config SERIAL_S3C6400
+config SERIAL_S3C64XX
 	tristate "Samsung S3C6400/S3C6410 Serial port support"
 	depends on SERIAL_SAMSUNG && (CPU_S3C6400 || CPU_S3C6410)
 	default y

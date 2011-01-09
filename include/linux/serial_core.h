@@ -82,8 +82,8 @@
 #define PORT_SCIF	53
 #define PORT_IRDA	54
 
-/* Samsung S3C2410 SoC and derivatives thereof */
-#define PORT_S3C2410    55
+/* Samsung S3C SoC and derivatives thereof */
+#define PORT_S3C	55
 
 /* SGI IP22 aka Indy / Challenge S / Indigo 2 */
 #define PORT_IP22ZILOG	56
@@ -162,7 +162,7 @@
 /* SH-SCI */
 #define PORT_SCIFA	83
 
-#define PORT_S3C6400	84
+#define PORT_S3C64XX	84
 
 /* NWPSERIAL */
 #define PORT_NWPSERIAL	85

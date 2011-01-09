@@ -1,0 +1,5 @@
+#!/bin/sh
+
+make CFLAGS=-O3
+cp drivers/input/touchscreen/qt5480.ko /usr/src/kernel/i5700-leshak-initramfs-froyo-2.6.32/lib/modules
+cp drivers/net/tun.ko /usr/src/kernel/i5700-leshak-initramfs-froyo-2.6.32/lib/modules
