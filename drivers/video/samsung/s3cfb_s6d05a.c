@@ -92,7 +92,12 @@ EXPORT_SYMBOL(backlight_level_ctrl);
 
 static void s3cfb_set_fimd_info(void)
 {
-	s3c_fimd.vidcon1    = S3C_VIDCON1_IVCLK_RISE_EDGE | 
+	s3c_fimd.dithmode	= S3C_DITHMODE_RDITHPOS_6BIT |
+				  S3C_DITHMODE_GDITHPOS_6BIT |
+				  S3C_DITHMODE_BDITHPOS_6BIT |
+				  S3C_DITHMODE_DITHERING_ENABLE;
+
+	s3c_fimd.vidcon1    = S3C_VIDCON1_IVCLK_RISE_EDGE |
 						  S3C_VIDCON1_IHSYNC_INVERT |
 	                      S3C_VIDCON1_IVSYNC_INVERT |
 	                      S3C_VIDCON1_IVDEN_NORMAL;
@@ -190,17 +195,17 @@ static void lcd_gpio_init(void)
 	s3c_gpio_cfgpin(GPIO_LCD_DE, S3C_GPIO_SFN(GPIO_LCD_DE_AF));
 	/* CLK */
 	s3c_gpio_cfgpin(GPIO_LCD_CLK, S3C_GPIO_SFN(GPIO_LCD_CLK_AF));
-	
+
 	/* LCD_RST_N */
 	if (gpio_is_valid(GPIO_LCD_RST_N)) {
-		if (gpio_request(GPIO_LCD_RST_N, S3C_GPIO_LAVEL(GPIO_LCD_RST_N))) 
+		if (gpio_request(GPIO_LCD_RST_N, S3C_GPIO_LAVEL(GPIO_LCD_RST_N)))
 			printk(KERN_ERR "Failed to request GPIO_LCD_RST_N!\n");
 		gpio_direction_output(GPIO_LCD_RST_N, GPIO_LEVEL_HIGH);
 	}
 	s3c_gpio_setpull(GPIO_LCD_RST_N, S3C_GPIO_PULL_NONE);
 	/* LCD_ID */
 	if (gpio_is_valid(GPIO_LCD_ID)) {
-		if (gpio_request(GPIO_LCD_ID, S3C_GPIO_LAVEL(GPIO_LCD_ID))) 
+		if (gpio_request(GPIO_LCD_ID, S3C_GPIO_LAVEL(GPIO_LCD_ID)))
 			printk(KERN_ERR "Failed to request GPIO_LCD_ID!\n");
 		gpio_direction_input(GPIO_LCD_ID);
 	}
@@ -208,21 +213,21 @@ static void lcd_gpio_init(void)
 
 	/* LCD_SCLK */
 	if (gpio_is_valid(GPIO_LCD_SCLK)) {
-		if (gpio_request(GPIO_LCD_SCLK, S3C_GPIO_LAVEL(GPIO_LCD_SCLK))) 
+		if (gpio_request(GPIO_LCD_SCLK, S3C_GPIO_LAVEL(GPIO_LCD_SCLK)))
 			printk(KERN_ERR "Failed to request GPIO_LCD_SCLK!\n");
 		gpio_direction_output(GPIO_LCD_SCLK, GPIO_LEVEL_HIGH);
 	}
 	s3c_gpio_setpull(GPIO_LCD_SCLK, S3C_GPIO_PULL_NONE);
 	/* LCD_CS_N */
 	if (gpio_is_valid(GPIO_LCD_CS_N)) {
-		if (gpio_request(GPIO_LCD_CS_N, S3C_GPIO_LAVEL(GPIO_LCD_CS_N))) 
+		if (gpio_request(GPIO_LCD_CS_N, S3C_GPIO_LAVEL(GPIO_LCD_CS_N)))
 			printk(KERN_ERR "Failed to request GPIO_LCD_CS_N!\n");
 		gpio_direction_output(GPIO_LCD_CS_N, GPIO_LEVEL_HIGH);
 	}
 	s3c_gpio_setpull(GPIO_LCD_CS_N, S3C_GPIO_PULL_NONE);
 	/* LCD_SDI */
 	if (gpio_is_valid(GPIO_LCD_SDI)) {
-		if (gpio_request(GPIO_LCD_SDI, S3C_GPIO_LAVEL(GPIO_LCD_SDI))) 
+		if (gpio_request(GPIO_LCD_SDI, S3C_GPIO_LAVEL(GPIO_LCD_SDI)))
 			printk(KERN_ERR "Failed to request GPIO_LCD_SDI!\n");
 		gpio_direction_output(GPIO_LCD_SDI, GPIO_LEVEL_HIGH);
 	}
@@ -248,7 +253,7 @@ static void backlight_gpio_init(void)
 
 
 
-#define DEFAULT_USLEEP	5	
+#define DEFAULT_USLEEP	5
 
 #define PWRCTL			0xF3
 #define SLPIN			0x10
@@ -280,7 +285,7 @@ static void backlight_gpio_init(void)
 
 
 struct setting_table {
-	u8 command;	
+	u8 command;
 	u8 parameters;
 	u8 parameter[15];
 	s32 wait;
@@ -289,20 +294,20 @@ struct setting_table {
 static struct setting_table power_on_setting_table[] = {
 	{ PWRCTL,  9,  { 0x00, 0x00, 0x2A, 0x00, 0x00, 0x33, 0x29, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
 	{ SLPOUT,  0,  { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },  15 },
-	
+
 	{ DISCTL,  11, { 0x16, 0x16, 0x0F, 0x0A, 0x05, 0x0A, 0x05, 0x10, 0x00, 0x16, 0x16, 0x00, 0x00, 0x00, 0x00 },   0 },
 	{ PWRCTL,  9,  { 0x00, 0x01, 0x2A, 0x00, 0x00, 0x33, 0x29, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
 	{ VCMCTL,  5,  { 0x1A, 0x1A, 0x18, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
 	{ SRCCTL,  6,  { 0x00, 0x00, 0x0A, 0x01, 0x01, 0x1D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
 	{ GATECTL, 3,  { 0x44, 0x3B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },  15 },
-	
+
 	{ PWRCTL,  9,  { 0x00, 0x03, 0x2A, 0x00, 0x00, 0x33, 0x29, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },  15 },
 	{ PWRCTL,  9,  { 0x00, 0x07, 0x2A, 0x00, 0x00, 0x33, 0x29, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },  15 },
 	{ PWRCTL,  9,  { 0x00, 0x0F, 0x2A, 0x00, 0x02, 0x33, 0x29, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },  15 },
 	{ PWRCTL,  9,  { 0x00, 0x1F, 0x2A, 0x00, 0x02, 0x33, 0x29, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },  15 },
 	{ PWRCTL,  9,  { 0x00, 0x3F, 0x2A, 0x00, 0x08, 0x33, 0x29, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },  25 },
 	{ PWRCTL,  9,  { 0x00, 0x7F, 0x2A, 0x00, 0x08, 0x33, 0x29, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },  35 },
-	
+
 	{ MADCTL,  1,  { 0x98, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
 	{ COLMOD,  1,  { 0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
 	{ GAMCTL1, 15, { 0x00, 0x00, 0x00, 0x14, 0x27, 0x2D, 0x2C, 0x2D, 0x10, 0x11, 0x10, 0x16, 0x04, 0x22, 0x22 },   0 },
@@ -311,16 +316,16 @@ static struct setting_table power_on_setting_table[] = {
 	{ GAMCTL4, 15, { 0x80, 0x16, 0x00, 0x00, 0x00, 0x15, 0x1E, 0x23, 0x16, 0x0D, 0x07, 0x10, 0x00, 0x81, 0x42 },   0 },
 	{ GAMCTL5, 15, { 0x00, 0x00, 0x34, 0x30, 0x2F, 0x2F, 0x2E, 0x2F, 0x0E, 0x0D, 0x09, 0x0E, 0x00, 0x22, 0x12 },   0 },
 	{ GAMCTL6, 15, { 0x00, 0x00, 0x34, 0x30, 0x2F, 0x2F, 0x2E, 0x2F, 0x0E, 0x0D, 0x09, 0x0E, 0x00, 0x22, 0x12 },   0 },
-	{ BCMODE,  1,  { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },	
-	{ MIECTL3, 2,  { 0x7C, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },	
+	{ BCMODE,  1,  { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
+	{ MIECTL3, 2,  { 0x7C, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
 	{ WRDISBV, 1,  { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
-//	{ MIECTL1, 3,  { 0x80, 0x80, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },	
-//	{ MIECTL2, 3,  { 0x20, 0x01, 0x8F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },	
-//	{ WRCABC,  1,  { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },	
+//	{ MIECTL1, 3,  { 0x80, 0x80, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
+//	{ MIECTL2, 3,  { 0x20, 0x01, 0x8F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
+//	{ WRCABC,  1,  { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
 	{ DCON,    1,  { 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },  40 },
-	
+
 	{ DCON,    1,  { 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
-	{ WRCTRLD, 1,  { 0x2C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },	
+	{ WRCTRLD, 1,  { 0x2C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 },
 };
 
 
@@ -336,13 +341,13 @@ static struct setting_table power_off_setting_table[] = {
 #define POWER_OFF_SETTINGS	(int)(sizeof(power_off_setting_table)/sizeof(struct setting_table))
 
 #if 0
-static struct setting_table cabc_on_setting_table[] = 
+static struct setting_table cabc_on_setting_table[] =
 	{  WRCABC,  1, { 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 };
 
-static struct setting_table cabc_off_setting_table[] = 
+static struct setting_table cabc_off_setting_table[] =
 	{  WRCABC,  1, { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 };
 #endif
-static struct setting_table backlight_setting_table = 
+static struct setting_table backlight_setting_table =
 	{ WRDISBV,  1, { 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   0 };
 
 static void setting_table_write(struct setting_table *table)
@@ -351,62 +356,62 @@ static void setting_table_write(struct setting_table *table)
 
 		LCD_CSX_HIGH
 		udelay(DEFAULT_USLEEP);
-		LCD_SCL_HIGH 
+		LCD_SCL_HIGH
 		udelay(DEFAULT_USLEEP);
-	
+
 		/* Write Command */
 		LCD_CSX_LOW
 		udelay(DEFAULT_USLEEP);
-		
-		LCD_SCL_LOW 
-		udelay(DEFAULT_USLEEP); 	
-		LCD_SDI_LOW 
+
+		LCD_SCL_LOW
 		udelay(DEFAULT_USLEEP);
-		LCD_SCL_HIGH 
-		udelay(DEFAULT_USLEEP); 
-	
-		for (i = 7; i >= 0; i--) { 
+		LCD_SDI_LOW
+		udelay(DEFAULT_USLEEP);
+		LCD_SCL_HIGH
+		udelay(DEFAULT_USLEEP);
+
+		for (i = 7; i >= 0; i--) {
 			LCD_SCL_LOW
 			udelay(DEFAULT_USLEEP);
 			if ((table->command >> i) & 0x1)
 				LCD_SDI_HIGH
 			else
 				LCD_SDI_LOW
-			udelay(DEFAULT_USLEEP); 
+			udelay(DEFAULT_USLEEP);
 			LCD_SCL_HIGH
-			udelay(DEFAULT_USLEEP); 
+			udelay(DEFAULT_USLEEP);
 		}
-	
+
 		LCD_CSX_HIGH
-		udelay(DEFAULT_USLEEP); 
-	
+		udelay(DEFAULT_USLEEP);
+
 		/* Write Parameter */
 		if ((table->parameters) > 0) {
 			for (j = 0; j < table->parameters; j++) {
-				LCD_CSX_LOW 
-				udelay(DEFAULT_USLEEP); 	
-			
-				LCD_SCL_LOW 
-				udelay(DEFAULT_USLEEP); 	
-				LCD_SDI_HIGH 
+				LCD_CSX_LOW
 				udelay(DEFAULT_USLEEP);
-				LCD_SCL_HIGH 
-				udelay(DEFAULT_USLEEP); 	
-	
-				for (i = 7; i >= 0; i--) { 
+
+				LCD_SCL_LOW
+				udelay(DEFAULT_USLEEP);
+				LCD_SDI_HIGH
+				udelay(DEFAULT_USLEEP);
+				LCD_SCL_HIGH
+				udelay(DEFAULT_USLEEP);
+
+				for (i = 7; i >= 0; i--) {
 					LCD_SCL_LOW
-					udelay(DEFAULT_USLEEP); 
+					udelay(DEFAULT_USLEEP);
 					if ((table->parameter[j] >> i) & 0x1)
 						LCD_SDI_HIGH
 					else
 						LCD_SDI_LOW
-					udelay(DEFAULT_USLEEP); 
+					udelay(DEFAULT_USLEEP);
 					LCD_SCL_HIGH
-					udelay(DEFAULT_USLEEP); 				
+					udelay(DEFAULT_USLEEP);
 				}
-			
-				LCD_CSX_HIGH 
-				udelay(DEFAULT_USLEEP); 	
+
+				LCD_CSX_HIGH
+				udelay(DEFAULT_USLEEP);
 			}
 		}
 		msleep(table->wait);
@@ -425,7 +430,7 @@ static void setting_table_write(struct setting_table *table)
 
 void lcd_power_ctrl(s32 value)
 {
-	s32 i;	
+	s32 i;
 	u8 data;
 
 	// To prevent from another request while working.
@@ -435,20 +440,20 @@ void lcd_power_ctrl(s32 value)
 		return;
 		}
 	lcd_power = ON + 1;
-	
+
 	printk("#%s:%d s\n",__func__,value);
 
 	if (value) {
-	
+
 		/* Power On Sequence */
-	
+
 		/* Power Enable */
 		// Turn on VLCD1.8V first
 		if(pmic_read(MAX8698_ID, ONOFF2, &data, 1) != PMIC_PASS)
 			{
 			printk("LCD POWER CONTROL can't read the status from PMIC to turn on 1.8V\n");
 			}
-		
+
 		data |= ONOFF2_ELDO6;		// TURN ON VLCD_1.8V
 		if(pmic_write(MAX8698_ID, ONOFF2, &data, 1) != PMIC_PASS)
 			{
@@ -463,7 +468,7 @@ void lcd_power_ctrl(s32 value)
 			{
 			printk("LCD POWER CONTROL can't read the status from PMIC to turn on 3.0V\n");
 			}
-		
+
 		data |= ONOFF2_ELDO7;		// TURN ON VLCD_3.0V
 		if(pmic_write(MAX8698_ID, ONOFF2, &data, 1) != PMIC_PASS)
 			{
@@ -472,11 +477,11 @@ void lcd_power_ctrl(s32 value)
 
 		// wait longer than 1ms
 		msleep(2);
-		
+
 		/* Reset Asseert */
 		gpio_set_value(GPIO_LCD_RST_N, GPIO_LEVEL_HIGH);
-		msleep(1);	
-		
+		msleep(1);
+
 		gpio_set_value(GPIO_LCD_RST_N, GPIO_LEVEL_LOW);
 		msleep(1);		// hold low level longer than 10us
 
@@ -486,13 +491,13 @@ void lcd_power_ctrl(s32 value)
 		msleep(10);		// wait longer than 10ms before writing setting table
 
 		for (i = 0; i < POWER_ON_SETTINGS; i++)
-			setting_table_write(&power_on_setting_table[i]);	
+			setting_table_write(&power_on_setting_table[i]);
 	}
 	else {
 
 		/* Power Off Sequence */
 		for (i = 0; i < POWER_OFF_SETTINGS; i++)
-			setting_table_write(&power_off_setting_table[i]);	
+			setting_table_write(&power_off_setting_table[i]);
 
 		/* Reset Assert */
 		gpio_set_value(GPIO_LCD_RST_N, GPIO_LEVEL_LOW);
@@ -502,9 +507,9 @@ void lcd_power_ctrl(s32 value)
 			{
 			printk("LCD POWER CONTROL can't read the status from PMIC to turn off 3.0V\n");
 			}
-		
+
 		data &= ~ONOFF2_ELDO7;
-		
+
 		if(pmic_write(MAX8698_ID, ONOFF2, &data, 1) != PMIC_PASS)
 			{
 			printk("LCD POWER CONTROL can't write the command to PMIC to turn off 3.0V\n");
@@ -516,9 +521,9 @@ void lcd_power_ctrl(s32 value)
 			{
 			printk("LCD POWER CONTROL can't read the status from PMIC to turn off 1.8V\n");
 			}
-		
+
 		data &= ~ONOFF2_ELDO6;
-		
+
 		if(pmic_write(MAX8698_ID, ONOFF2, &data, 1) != PMIC_PASS)
 			{
 			printk("LCD POWER CONTROL can't write the command to PMIC to turn off 1.8V\n");
@@ -528,11 +533,11 @@ void lcd_power_ctrl(s32 value)
 		// so we need to make low them.
 		LCD_CSX_LOW
 		LCD_SCL_LOW
-		
+
 	}
 
 	lcd_power = value;
-	
+
 	printk("#%s:%d e\n",__func__,value);
 }
 
@@ -540,7 +545,7 @@ void backlight_ctrl(s32 value)
 {
 	if (value) {
 		/* Backlight On Sequence */
-		
+
 		if (lcd_power == OFF) {
 			if(!s3cfb_is_clock_on()) {
 				s3cfb_enable_clock_power();
@@ -549,15 +554,15 @@ void backlight_ctrl(s32 value)
 		}
 
 		backlight_setting_table.parameter[0] = (value & BACKLIGHT_LEVEL_VALUE);
-		
+
 //		printk("LCD Backlight level setting value ==> %d \n",value);
-		
-		setting_table_write(&backlight_setting_table);	
+
+		setting_table_write(&backlight_setting_table);
 	}
 	else {
 		/* Backlight Off Sequence */
 
-		lcd_power_ctrl(OFF);	
+		lcd_power_ctrl(OFF);
 	}
 
 }
@@ -570,9 +575,9 @@ void backlight_level_ctrl(s32 value)
 		return;
 
 	if (backlight_power)
-		backlight_ctrl(value);	
-	
-	backlight_level = value;	
+		backlight_ctrl(value);
+
+	backlight_level = value;
 }
 
 void backlight_power_ctrl(s32 value)
@@ -581,8 +586,8 @@ void backlight_power_ctrl(s32 value)
 		(value > ON))
 		return;
 
-	backlight_ctrl((value ? backlight_level : OFF));	
-	
+	backlight_ctrl((value ? backlight_level : OFF));
+
 	backlight_power = (value ? ON : OFF);
 }
 
@@ -598,8 +603,8 @@ static void s6d05a_set_backlight_level(u8 level)
 	if (backlight_level == level)
 		return;
 
-	backlight_ctrl(level);	
-	
+	backlight_ctrl(level);
+
 	backlight_level = level;
 }
 
@@ -655,21 +660,21 @@ void s3cfb_init_hw(void)
 	s3cfb_set_fimd_info();
 
 	s3cfb_set_gpio();
-#ifdef CONFIG_FB_S3C_LCD_INIT	
+#ifdef CONFIG_FB_S3C_LCD_INIT
 	lcd_gpio_init();
-	
+
 	backlight_gpio_init();
 
 	lcd_power_ctrl(ON);
 
 	backlight_level_ctrl(BACKLIGHT_LEVEL_DEFAULT);
 
-	backlight_power_ctrl(ON); 
+	backlight_power_ctrl(ON);
 #else
 	lcd_gpio_init();
-	
+
 	backlight_gpio_init();
-	
+
 	lcd_power = ON;
 
 //	backlight_level = BACKLIGHT_LEVEL_DEFAULT;
@@ -684,11 +689,29 @@ void s3cfb_init_hw(void)
 void s3cfb_display_logo(int win_num)
 {
 	s3c_fb_info_t *fbi = &s3c_fb_info[0];
-	u8 *logo_virt_buf;
-	
+	u16 *logo_virt_buf;
+#ifdef CONFIG_FB_S3C_BPP_24
+	u32 count;
+	u32 *scr_virt_buf = fbi->map_cpu_f1;
+#endif
+
+	if(win_num != 0)
+		return;
+
 	logo_virt_buf = ioremap_nocache(LOGO_MEM_BASE, LOGO_MEM_SIZE);
 
-	memcpy(fbi->map_cpu_f1, logo_virt_buf, LOGO_MEM_SIZE);	
+#ifdef CONFIG_FB_S3C_BPP_24
+	count = LOGO_MEM_SIZE / 2;
+	do {
+		u16 srcpix = *(logo_virt_buf++);
+		u32 dstpix =	((srcpix & 0xF800) << 8) |
+				((srcpix & 0x07E0) << 5) |
+				((srcpix & 0x001F) << 3);
+		*(scr_virt_buf++) = dstpix;
+	} while (--count);
+#else
+	memcpy(fbi->map_cpu_f1, logo_virt_buf, LOGO_MEM_SIZE);
+#endif
 
 	iounmap(logo_virt_buf);
 }
@@ -704,7 +727,7 @@ static struct timer_list progress_timer;
 static void progress_timer_handler(unsigned long data)
 {
 	s3c_fb_info_t *fbi = &s3c_fb_info[1];
-	unsigned short *bar_src, *bar_dst;	
+	unsigned short *bar_src, *bar_dst;
 	int	i, j, p;
 
 	/* 1 * 12 R5G5B5 BMP (Aligned 4 Bytes) */
@@ -716,7 +739,7 @@ static void progress_timer_handler(unsigned long data)
 			p = ((320 * i) + (progress * 2) + j);
 			*(bar_dst + p) = (*(bar_src - (i * 2)) | 0x8000);
 		}
-	}	
+	}
 
 	progress++;
 
@@ -724,22 +747,22 @@ static void progress_timer_handler(unsigned long data)
 		del_timer(&progress_timer);
 	}
 	else {
-		progress_timer.expires = (get_jiffies_64() + (HZ/15)); 
-		progress_timer.function = progress_timer_handler; 
+		progress_timer.expires = (get_jiffies_64() + (HZ/15));
+		progress_timer.function = progress_timer_handler;
 		add_timer(&progress_timer);
 	}
 }
 
-static unsigned int new_wincon1; 
-static unsigned int old_wincon1; 
+static unsigned int new_wincon1;
+static unsigned int old_wincon1;
 
 void s3cfb_start_progress(void)
 {
 	s3c_fb_info_t *fbi = &s3c_fb_info[1];
-	unsigned short *bg_src, *bg_dst;	
+	unsigned short *bg_src, *bg_dst;
 	int	i, j, p;
-	
-	memset(fbi->map_cpu_f1, 0x00, LOGO_MEM_SIZE);	
+
+	memset(fbi->map_cpu_f1, 0x00, LOGO_MEM_SIZE);
 
 	/* 320 * 25 R5G5B5 BMP */
 	bg_dst = (unsigned short *)(fbi->map_cpu_f1 + ((320 * 410) * 2));
@@ -753,7 +776,7 @@ void s3cfb_start_progress(void)
 			else
 				*(bg_dst + p) = (*(bg_src - p) | 0x8000);
 		}
-	}	
+	}
 
 	old_wincon1 = readl(S3C_WINCON1);
 
@@ -765,8 +788,8 @@ void s3cfb_start_progress(void)
 	writel(new_wincon1, S3C_WINCON1);
 
 	init_timer(&progress_timer);
-	progress_timer.expires = (get_jiffies_64() + (HZ/10)); 
-	progress_timer.function = progress_timer_handler; 
+	progress_timer.expires = (get_jiffies_64() + (HZ/10));
+	progress_timer.function = progress_timer_handler;
 	add_timer(&progress_timer);
 
 	progress_flag = ON;
@@ -779,10 +802,10 @@ void s3cfb_stop_progress(void)
 
 	del_timer(&progress_timer);
 #ifdef CONFIG_FB_S3C_BPP_24
-	writel(s3c_fimd.wincon0,    S3C_WINCON0);
+	writel(s3c_fimd.wincon0, S3C_WINCON0);
   	s3cfb_onoff_win(&s3c_fb_info[0], ON);
 #endif
-	writel(old_wincon1, S3C_WINCON1);
-	
+	writel(s3c_fimd.wincon1,  S3C_WINCON1);
+
 	progress_flag = OFF;
 }
